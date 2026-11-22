@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>Pixel Runner</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1d2b3a">
+<link rel="icon" href="icon-192.png">
 <style>
 :root{--bg:#1d2b3a;--ui:#ffd23f;--ink:#fff}
 @media (prefers-color-scheme: dark){:root{--bg:#10161d}}
@@ -21,9 +24,9 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated}
 <div class="btn" id="s">🔫</div><div class="btn" id="j">▲</div>
 <script>
 const cv=document.getElementById('c'),g=cv.getContext('2d');
-const W=320,H=180;let sc=1,ox=0,oy=0;
+const W=320,H=180;let sc=1,VW=320,VH=180,yOff=0;
 function rs(){cv.width=innerWidth;cv.height=innerHeight-(parseInt(getComputedStyle(document.body).paddingTop)||0);
-sc=Math.min(cv.width/W,cv.height/H);ox=(cv.width-W*sc)/2;oy=(cv.height-H*sc)/2;g.imageSmoothingEnabled=false}
+sc=Math.min(cv.width/W,cv.height/H);VW=cv.width/sc;VH=cv.height/sc;yOff=Math.max(0,VH-H-100/sc);g.imageSmoothingEnabled=false}
 addEventListener('resize',rs);rs();
 const K={l:0,r:0,j:0,s:0};
 const map={ArrowLeft:'l',a:'l',ArrowRight:'r',d:'r',ArrowUp:'j',w:'j',' ':'j',x:'s',k:'s'};
@@ -74,7 +77,7 @@ if(!e.dead&&hit(e,P)&&P.inv<=0)hurt()}
 en=en.filter(e=>!e.dead);
 for(const b of eb){b.x+=b.vx;b.l--;if(hit(b,P)&&P.inv<=0){b.l=0;hurt()}}eb=eb.filter(b=>b.l>0);
 for(const p of parts){p.x+=p.vx;p.y+=p.vy;p.l--}parts=parts.filter(p=>p.l>0);
-cam+=(P.x-W/2.5-cam)*.1;cam=Math.max(0,Math.min(LEN-W,cam));
+cam+=(P.x-VW/2.5-cam)*.1;cam=Math.max(0,Math.min(LEN-VW,cam));
 if(P.x>LEN-40){state='win';best=Math.max(best,score)}}
 function hurt(fall){P.hp--;P.inv=90;boom(P.x+6,P.y+8,'#ffd23f');
 if(fall){P.x=Math.max(0,P.x-90);let s=plats.filter(p=>p.y==150&&p.x<=P.x&&p.x+p.w>P.x)[0];if(!s){P.x=plats.filter(p=>p.y==150&&p.x+p.w<=P.x).pop().x+20}P.y=100;P.vy=0}
@@ -86,21 +89,22 @@ R(o.x+2,o.y+6,8,6,c1);R(o.x+2,o.y+12,3,4,'#333');R(o.x+7,o.y+12,3,4,'#333');
 if(o.gun)R(o.x+(f>0?9:-3),o.y+7,6,2,'#555')}
 function draw(){
 g.setTransform(1,0,0,1,0,0);g.fillStyle='#10161d';g.fillRect(0,0,cv.width,cv.height);
-g.setTransform(sc,0,0,sc,ox,oy);g.beginPath();g.rect(0,0,W,H);g.clip();
-const gr=g.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#5ec4ee');gr.addColorStop(1,'#d8f3ff');g.fillStyle=gr;g.fillRect(0,0,W,H);
+g.setTransform(sc,0,0,sc,0,0);
+const gr=g.createLinearGradient(0,0,0,VH);gr.addColorStop(0,'#5ec4ee');gr.addColorStop(1,'#d8f3ff');g.fillStyle=gr;g.fillRect(0,0,VW,VH);g.translate(0,yOff);
 for(let i=0;i<8;i++){const mx=i*70-(cam*.3%70);g.fillStyle='#8ccf9c';g.beginPath();g.moveTo(mx-10,150);g.lineTo(mx+30,90);g.lineTo(mx+70,150);g.fill()}
-if(state=='menu'){g.fillStyle='#000a';g.fillRect(0,0,W,H);g.fillStyle='#ffd23f';g.font='bold 26px system-ui';g.textAlign='center';g.fillText('PIXEL RUNNER',W/2,70);
-g.fillStyle='#fff';g.font='11px system-ui';g.fillText('اضغط أي زر للبدء • Tap any button to start',W/2,100);g.fillText('◀ ▶ حرّك  •  ▲ قفز  •  🔫 ضرب',W/2,118);return}
+if(state=='menu'){g.setTransform(sc,0,0,sc,0,0);g.fillStyle='#000a';g.fillRect(0,0,VW,VH);g.fillStyle='#ffd23f';g.font='bold 26px system-ui';g.textAlign='center';g.fillText('PIXEL RUNNER',VW/2,VH/2-20);
+g.fillStyle='#fff';g.font='11px system-ui';g.fillText('اضغط أي زر للبدء • Tap any button to start',VW/2,VH/2+10);g.fillText('◀ ▶ حرّك  •  ▲ قفز  •  🔫 ضرب',VW/2,VH/2+28);return}
 for(const p of plats){R(p.x,p.y,p.w,p.h,p.h>8?'#5a3a22':'#6b4a2b');R(p.x,p.y,p.w,4,'#4caf50')}
-R(LEN-30,100,4,50,'#fff');R(LEN-26,100,18,10,'#ff5a36');
+R(cam,180,VW+2,400,'#4a2f1b');R(LEN-30,100,4,50,'#fff');R(LEN-26,100,18,10,'#ff5a36');
 for(const e of en)if(e.x>cam-20&&e.x<cam+W+20){e.gun=e.type==1;man(e,e.type?'#3b5bdb':'#c0392b','#222',e.vx>=0?1:-1)}
 if(P.inv<=0||t%6<3){P.gun=1;man(P,'#2e9e5b','#ffd23f',P.f)}
 for(const b of bul)R(b.x,b.y,b.w,b.h,'#ffd23f');for(const b of eb)R(b.x,b.y,b.w,b.h,'#ff3b3b');
 for(const p of parts)R(p.x,p.y,2,2,p.c);
-g.setTransform(sc,0,0,sc,ox,oy);g.textAlign='left';g.fillStyle='#fff';g.font='bold 11px system-ui';
-g.fillText('❤'.repeat(Math.max(0,P.hp)),8,16);g.textAlign='right';g.fillText('Score '+score+'  Best '+best,W-8,16);
-if(state!='play'){g.fillStyle='#000a';g.fillRect(0,0,W,H);g.textAlign='center';g.fillStyle=state=='win'?'#7CFC9a':'#ff6b6b';g.font='bold 24px system-ui';
-g.fillText(state=='win'?'YOU WIN!':'GAME OVER',W/2,80);g.fillStyle='#fff';g.font='12px system-ui';g.fillText('Score: '+score,W/2,102);g.fillText('اضغط أي زر للإعادة',W/2,122)}}
+g.setTransform(sc,0,0,sc,0,0);g.textAlign='left';g.fillStyle='#fff';g.font='bold 11px system-ui';
+g.fillText('❤'.repeat(Math.max(0,P.hp)),8,16);g.textAlign='right';g.fillText('Score '+score+'  Best '+best,VW-8,16);
+if(state!='play'){g.fillStyle='#000a';g.fillRect(0,0,VW,VH);g.textAlign='center';g.fillStyle=state=='win'?'#7CFC9a':'#ff6b6b';g.font='bold 24px system-ui';
+g.fillText(state=='win'?'YOU WIN!':'GAME OVER',VW/2,VH/2-10);g.fillStyle='#fff';g.font='12px system-ui';g.fillText('Score: '+score,VW/2,VH/2+12);g.fillText('اضغط أي زر للإعادة',VW/2,VH/2+32)}}
+try{if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 function loop(){upd();draw();requestAnimationFrame(loop)}loop();
 </script>
 </body>
